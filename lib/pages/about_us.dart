@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:china_open/util/data_util.dart';
+import 'package:china_open/commons/constants.dart' show AppColors;
+import 'package:china_open/pages/about_usDetails_page.dart';
+import 'package:china_open/pages/myMessagePage.dart';
+import 'package:china_open/pages/loginWebPage.dart';
+import 'package:china_open/commons/event_bus.dart';
 
 class AboutPage extends StatefulWidget {
   @override
@@ -6,13 +12,110 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
+  List menuTitles = [
+    '我的消息',
+    '阅读记录',
+    '我的博客',
+    '我的问答',
+    '我的活动',
+    '我的团队',
+    '邀请好友',
+  ];
+  List menuIcons = [
+    Icons.message,
+    Icons.print,
+    Icons.error,
+    Icons.phone,
+    Icons.send,
+    Icons.people,
+    Icons.person,
+  ];
+  String userAdmin;
+  String userName;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("我的"),
-        centerTitle: false,
+    return ListView.separated(
+        itemBuilder: (BuildContext context, int index) {
+          if (index == 0) {
+            return _buildHead();
+          }
+          index -= 1;
+          return ListTile(
+            leading: Icon(menuIcons[index]),
+            title: Text(menuTitles[index]),
+            trailing: Icon(Icons.arrow_forward_ios),
+            onTap: () {
+              DataUtils.isLogin().then((isLogin) {
+                if (isLogin) {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => MyMessagePage()));
+                } else {
+                  _login();
+                }
+              });
+            },
+          );
+        },
+        separatorBuilder: (BuildContext context, int index) {
+          return Divider();
+        },
+        itemCount: menuTitles.length + 1);
+  }
+
+  Container _buildHead() {
+    return Container(
+      height: 150,
+      color: Color(AppColors.APP_THEME),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            GestureDetector(
+              child: userAdmin != null
+                  ? Container(
+                      width: 60.0,
+                      height: 60.0,
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border:
+                              Border.all(color: Color(0xfffffff), width: 2.0),
+                          image: DecorationImage(
+                              image: NetworkImage(userAdmin),
+                              fit: BoxFit.fill)),
+                    )
+                  : Image.asset(
+                      'assets/images/ic_avatar_default.png',
+                      width: 60.0,
+                      height: 60.0,
+                    ),
+              onTap: () {
+                DataUtils.isLogin().then((islogin) {
+                  if (islogin) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => AboutUsDetails_page()));
+                  } else {
+                    _login();
+                  }
+                });
+              },
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  void _login() async {
+    final result = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => LoginWebPage()));
+    if (result != null && result == 'refresh') {
+      eventBus.fire(LoginInEvent());
+    }
   }
 }
