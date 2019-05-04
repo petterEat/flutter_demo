@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:china_open/util/data_util.dart';
-import 'package:china_open/commons/constants.dart' show AppColors;
+import 'package:china_open/commons/constants.dart' show AppColors,AppUrls;
 import 'package:china_open/pages/about_usDetails_page.dart';
 import 'package:china_open/pages/myMessagePage.dart';
 import 'package:china_open/pages/loginWebPage.dart';
 import 'package:china_open/commons/event_bus.dart';
+import 'package:china_open/util/net_util.dart';
+import 'dart:convert';
 
 class AboutPage extends StatefulWidget {
   @override
@@ -36,6 +38,13 @@ class _AboutPageState extends State<AboutPage> {
   @override
   void initState() {
     super.initState();
+
+    eventBus.on<LoginInEvent>().listen((eventBus){
+      _getUserInfo();
+    });
+    eventBus.on<LoginOutEvent>().listen((eventBus){
+      _showUserInfo();
+    });
   }
 
   @override
@@ -117,5 +126,46 @@ class _AboutPageState extends State<AboutPage> {
     if (result != null && result == 'refresh') {
       eventBus.fire(LoginInEvent());
     }
+  }
+
+  _showUserInfo(){
+    DataUtils.getUserInfo().then((user){
+      if(mounted){
+        setState(() {
+          if(user != null) {
+            userAdmin = user.avatar;
+            userName = user.name;
+          }else{
+            userAdmin = null;
+            userName = null;
+          }
+        });
+      }
+    });
+  }
+
+  _getUserInfo() async{
+    DataUtils.getAccessToken().then((accessToken){
+      if(accessToken == null || accessToken.length == 0){
+        return;
+      }
+      Map<String, dynamic> params = Map<String, dynamic>();
+      params['access_token'] = accessToken;
+      params['dataType'] = 'json';
+      print('accessToken: $accessToken');
+      NetUtil.get(AppUrls.OPENAPI_USER, params).then((data){
+        if(data != null){
+          Map<String,dynamic> map = json.decode(data);
+          if(mounted){
+            setState(() {
+              userAdmin = map['avatar'];
+              userName = map['name'];
+            });
+          }
+          DataUtils.saveUserInfo(map);
+        }
+      });
+
+    });
   }
 }

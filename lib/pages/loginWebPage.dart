@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:china_open/commons/constants.dart' show AppColors,AppInfos,AppUrls;
 import 'package:flutter/cupertino.dart';
+import 'package:china_open/util/net_util.dart';
+import 'package:china_open/util/data_util.dart';
+import 'dart:convert';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 class LoginWebPage extends StatefulWidget {
@@ -22,7 +25,29 @@ class _LoginWebPageState extends State<LoginWebPage> {
       if(mounted){
         isloading = false;
       }
-      print('url');
+      //www.dongnaoedu.com/?code=O1ijTn&state=
+      print('url'+url);
+      if(url != null && url.length > 0 && url.contains("code=")){
+        String code = url.split("?")[1].split('&')[0].split('=')[1];
+        Map<String,dynamic> params = Map<String,dynamic>();
+        params['client_id'] = AppInfos.CLIENT_ID;
+        params['client_secret'] = AppInfos.CLIENT_SECRET;
+        params['grant_type'] = 'authorization_code';
+        params['redirect_uri'] = AppInfos.REDIRECT_URI;
+        params['code'] = '$code';
+        params['dataType'] = 'json';
+
+        NetUtil.get(AppUrls.OAUTH2_TOKEN, params).then((data){
+          if(null != data){
+            Map<String,dynamic> map = json.decode(data);
+            if(null != map && map.isNotEmpty){
+              DataUtils.saveLoginInfo(map);
+              Navigator.pop(context,'refresh');
+            }
+          }
+        });
+      }
+      
     });
   }
 
