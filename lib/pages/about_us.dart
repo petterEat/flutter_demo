@@ -39,6 +39,8 @@ class _AboutPageState extends State<AboutPage> {
   void initState() {
     super.initState();
 
+    _showUserInfo();
+
     eventBus.on<LoginInEvent>().listen((eventBus){
       _getUserInfo();
     });
@@ -107,7 +109,7 @@ class _AboutPageState extends State<AboutPage> {
                 DataUtils.isLogin().then((islogin) {
                   if (islogin) {
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => AboutUsDetails_page()));
+                        builder: (context) => AboutUsDetailPage()));
                   } else {
                     _login();
                   }
