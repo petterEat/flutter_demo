@@ -1,5 +1,4 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:china_open/bean/UserInfo.dart';
 import 'package:china_open/bean/User.dart';
 
 class DataUtils{
