@@ -105,7 +105,7 @@ class _NewsListPage extends State<NewsListPage> {
 
   void getNewsData(bool isloadMore) async {
     DataUtils.isLogin().then((isLogin){
-      if(!isLogin){
+      if(isLogin){
         DataUtils.getAccessToken().then((accessToken){
           if (accessToken == null || accessToken.length == 0) {
             return;
@@ -118,7 +118,6 @@ class _NewsListPage extends State<NewsListPage> {
           params['dataType'] = 'json';
 
           NetUtil.get(AppUrls.NEWS_LIST, params).then((data){
-            print('NEWS_LIST: $data');
             if (data != null && data.isNotEmpty) {
               Map<String, dynamic> map = json.decode(data);
               List _newsList = map['newslist'];

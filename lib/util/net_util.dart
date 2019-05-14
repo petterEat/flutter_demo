@@ -12,7 +12,13 @@ class NetUtil{
       url += result;
       print('httpNet: '+url);
       http.Response response = await http.get(url);
-      return response.body;
+      print(response.body);
+      if(response.statusCode == 200){
+        return response.body;
+      }else{
+        return '请求遇到问题啦'+response.body;
+      }
+
     }else{
       print('please check you http data');
     }
