@@ -11,7 +11,7 @@ class NewsListItem extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(
-            builder: (covariant) => NewsListDetailPage(
+            builder: (context) => NewsListDetailPage(
                   id: newsDatas['id'],
                 )));
       },
