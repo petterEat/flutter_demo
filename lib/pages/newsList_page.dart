@@ -55,7 +55,7 @@ class _NewsListPage extends State<NewsListPage> {
     eventBus.on<LoginOutEvent>().listen((event){
       if(mounted){
         setState(() {
-          this.isLogin = true;
+          this.isLogin = false;
         });
       }
     });

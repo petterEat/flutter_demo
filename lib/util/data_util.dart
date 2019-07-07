@@ -25,6 +25,11 @@ class DataUtils{
     return isLogin != null && isLogin;
   }
 
+  static void loginOut() async{
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.clear();
+  }
+
   static Future<void> saveLoginInfo(Map<String,dynamic> map) async{
     if (map != null && map.isNotEmpty) {
       SharedPreferences sp = await SharedPreferences.getInstance();

@@ -10,13 +10,17 @@ class NetUtil{
       });
       String result = sbf.toString().substring(0,sbf.length-1);
       url += result;
-      print('httpNet: '+url);
-      http.Response response = await http.get(url);
-      print(response.body);
-      if(response.statusCode == 200){
-        return response.body;
-      }else{
-        return '请求遇到问题啦'+response.body;
+      print('request: '+url);
+      try{
+        http.Response response = await http.get(url);
+        print("body:"+response.body);
+        if(response.statusCode == 200){
+          return response.body;
+        }else{
+          return '请求遇到问题啦'+response.body;
+        }
+      }catch(exception){
+        print(exception);
       }
 
     }else{
