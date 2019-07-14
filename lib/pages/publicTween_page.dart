@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'package:china_open/util/data_util.dart';
 import 'package:china_open/util/net_util.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:china_open/commons/constants.dart' show AppColors,AppUrls;
+import 'package:china_open/commons/constants.dart' show AppColors, AppUrls;
 import 'package:china_open/commons/event_bus.dart';
 import 'package:china_open/pages/loginWebPage.dart';
+import 'package:china_open/pages/tweet_list_item.dart';
 
 class PublickTweenPage extends StatefulWidget {
   @override
@@ -26,7 +27,18 @@ class _PublickTweenPage extends State<PublickTweenPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabTitle.length, vsync: this);
-    _tabController.addListener(() {});
+    _scrollController.addListener(() {
+      var maxScorll = _scrollController.position.maxScrollExtent;
+      var pixels = _scrollController.position.pixels;
+      if (maxScorll == pixels) {
+        currentPage++;
+        if(_tabController.index == 0){
+          getTweetList(true, true);
+        }else{
+          getTweetList(true, false);
+        }
+      }
+    });
     DataUtils.isLogin().then((isLogin) {
       if (!mounted) {
         return;
@@ -43,7 +55,14 @@ class _PublickTweenPage extends State<PublickTweenPage>
         this.isLogin = true;
       });
     });
-
+    eventBus.on<LoginOutEvent>().listen((isloginOut){
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        this.isLogin = false;
+      });
+    });
   }
 
   @override
@@ -69,9 +88,10 @@ class _PublickTweenPage extends State<PublickTweenPage>
                   style: TextStyle(color: Color(0xff000000)),
                 ),
               ),
-              onTap: () async{
-                final result = await Navigator.of(context).push(MaterialPageRoute(builder: (context) => LoginWebPage()));
-                if(result != null && result == 'fresh'){
+              onTap: () async {
+                final result = await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => LoginWebPage()));
+                if (result != null && result == 'fresh') {
                   eventBus.fire(LoginInEvent);
                 }
               },
@@ -105,7 +125,7 @@ class _PublickTweenPage extends State<PublickTweenPage>
     }
   }
 
-  Future<Null> _pullToRefresh() async{
+  Future<Null> _pullToRefresh() async {
     currentPage = 1;
     getTweetList(false, false);
     return null;
@@ -120,6 +140,7 @@ class _PublickTweenPage extends State<PublickTweenPage>
     }
     return RefreshIndicator(
         child: ListView.separated(
+            controller: _scrollController,
             itemBuilder: (context, index) {
               if (index == lastTweetList.length) {
                 return Padding(
@@ -139,10 +160,10 @@ class _PublickTweenPage extends State<PublickTweenPage>
                 );
               }
               return Container(
-                child: Text('container'),
+                child: TweetItem(tweetData: lastTweetList[index]),
               );
             },
-            separatorBuilder: (context,index){
+            separatorBuilder: (context, index) {
               return Container(
                 height: 10.0,
                 color: Colors.grey[200],
@@ -152,28 +173,38 @@ class _PublickTweenPage extends State<PublickTweenPage>
         onRefresh: _pullToRefresh);
   }
 
-  _buildHotTweetList(){
-    if(hotTweetList == null){
-      getTweetList(false,true);
+  _buildHotTweetList() {
+    if (hotTweetList == null) {
+      getTweetList(false, true);
       return Center(
         child: CupertinoActivityIndicator(),
       );
     }
     return ListView.separated(
-        itemBuilder: (context,index){
-          if(index == hotTweetList.length){
-            return Container(
+        controller: _scrollController,
+        itemBuilder: (context, index) {
+          if (index == hotTweetList.length) {
+            return Padding(
               padding: const EdgeInsets.all(10.0),
-              color: Color(0xaaaaaaaa),
-              child: Text('没有更多数据了'),
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    CupertinoActivityIndicator(),
+                    SizedBox(
+                      width: 20.0,
+                    ),
+                    Text('正在加载'),
+                  ],
+                ),
+              ),
             );
           }
           return Container(
-            height: 10.0,
-            child: Text('hot item'),
+            child: TweetItem(tweetData: hotTweetList[index]),
           );
         },
-        separatorBuilder: (context,index){
+        separatorBuilder: (context, index) {
           return Container(
             height: 10.0,
             color: Colors.grey[200],
@@ -182,12 +213,12 @@ class _PublickTweenPage extends State<PublickTweenPage>
         itemCount: hotTweetList.length + 1);
   }
 
-  getTweetList(bool isLoadMore,bool isHot){
-    DataUtils.isLogin().then((isLogin){
-      if(isLogin){
-        DataUtils.getAccessToken().then((accessToken){
-          if(accessToken == null || accessToken.length == 0){
-              return;
+  getTweetList(bool isLoadMore, bool isHot) {
+    DataUtils.isLogin().then((isLogin) {
+      if (isLogin) {
+        DataUtils.getAccessToken().then((accessToken) {
+          if (accessToken == null || accessToken.length == 0) {
+            return;
           }
           Map<String, dynamic> params = Map<String, dynamic>();
           params['access_token'] = accessToken;
@@ -195,7 +226,7 @@ class _PublickTweenPage extends State<PublickTweenPage>
           params['page'] = currentPage;
           params['pageSize'] = 10;
           params['dataType'] = 'json';
-          NetUtil.get(AppUrls.TWEET_LIST, params).then((data){
+          NetUtil.get(AppUrls.TWEET_LIST, params).then((data) {
             if (data != null && data.isNotEmpty) {
               Map<String, dynamic> map = json.decode(data);
               List _tweetList = map['tweetlist'];
@@ -204,6 +235,7 @@ class _PublickTweenPage extends State<PublickTweenPage>
                 if (isLoadMore) {
                   if (isHot) {
                     lastTweetList.addAll(_tweetList);
+                  } else {
                     hotTweetList.addAll(_tweetList);
                   }
                 } else {

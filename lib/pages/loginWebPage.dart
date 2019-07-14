@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:china_open/util/net_util.dart';
 import 'package:china_open/util/data_util.dart';
 import 'dart:convert';
+import 'package:china_open/commons/event_bus.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 class LoginWebPage extends StatefulWidget {
@@ -42,6 +43,7 @@ class _LoginWebPageState extends State<LoginWebPage> {
             Map<String,dynamic> map = json.decode(data);
             if(null != map && map.isNotEmpty){
               DataUtils.saveLoginInfo(map);
+              eventBus.fire(LoginInEvent());
               Navigator.pop(context,'refresh');
             }
           }
